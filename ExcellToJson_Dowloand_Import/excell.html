@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel</title>
+</head>
+
+<body>
+    <button type="button" onclick="downloadxcel()"> indir</button>
+    <input type="file" id="fileInput" />
+    <div id="output"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"
+        integrity="sha512-CryKbMe7sjSCDPl18jtJI5DR5jtkUWxPXWaLCst6QjH8wxDexfRJic2WRmRXmstr2Y8SxDDWuBO6CQC6IE4KTA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js"
+        integrity="sha512-csNcFYJniKjJxRWRV1R7fvnXrycHP6qDR21mgz1ZP55xY5d+aHLfo9/FcGDQLfn2IfngbAHd8LdfsagcCqgTcQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+
+
+
+
+        // Excel dosyası oluşturmak ve indirmek için verilen dizi veriyi kullanarak Excel dosyası oluşturan fonksiyon
+        function arrayToExcel(data, customOptions = {}) {
+            // Seçenekleri varsayılan değerlerle birleştirerek options nesnesini oluştur
+            let options = Object.assign(
+                {
+                    sheetName: "Sheet",
+                    fileName: "ExcelDownload_",
+                    fileNameAdd: false,
+                    dateTimeSeperator: "_"
+                },
+                customOptions
+            );
+
+            // Şu anki tarih ve saat bilgisini alarak dosya adına eklenecek tarih bilgisini oluştur
+            let DateTime = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60 * 1000)).toISOString().replace("T", options.dateTimeSeperator).split(".")[0];
+
+            // Dosya adına eklenecek ek bilgisini belirle (datetime, date, time veya boş)
+            let fileNameAdd = "";
+            if (options.fileNameAdd == "datetime") {
+                fileNameAdd = DateTime;
+            } else if (options.fileNameAdd == "date") {
+                fileNameAdd = DateTime.split(options.dateTimeSeperator)[0];
+            } else if (options.fileNameAdd == "time") {
+                fileNameAdd = DateTime.split(options.dateTimeSeperator)[1];
+            }
+
+            // Yeni bir Excel çalışma kitabı oluştur
+            var wb = XLSX.utils.book_new();
+
+            // Çalışma kitabının sayfa adlarının bulunduğu SheetNames dizisine yeni sayfa adını ekle
+            wb.SheetNames.push(options.sheetName);
+
+            // Excel sayfasına dönüştürülecek veriyi ws_data değişkenine kopyala
+            var ws_data = data;
+
+            // ws_data verisini Excel sayfasına dönüştür ve ws değişkenine ata
+            var ws = XLSX.utils.aoa_to_sheet(ws_data);
+
+            // Oluşturulan Excel sayfasını çalışma kitabının Sheets nesnesine ekleyerek ilişkilendir
+            wb.Sheets[options.sheetName] = ws;
+
+            // Oluşturulan çalışma kitabını xlsx formatında ve binary tipinde bir veri olarak dönüştür
+            var wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
+
+            // Binary veriyi ArrayBuffer'a dönüştüren yardımcı fonksiyon
+            function s2ab(s) {
+                var buf = new ArrayBuffer(s.length);
+                var view = new Uint8Array(buf);
+                for (var i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
+                return buf;
+            }
+
+            // Oluşturulan binary veriyi Blob'a dönüştürerek Excel dosyasını indir
+            saveAs(new Blob([s2ab(wbout)], { type: "application/octet-stream" }), options.fileName + fileNameAdd + '.xlsx');
+        }
+
+        // Örnek veriyi Excel dosyasına dönüştürerek indirmeyi başlatan fonksiyon
+        function downloadxcel() {
+            // Örnek veriler içeren dizi
+            var TabelShiftBreakTime = [["id", "Ad", "Soyadı", "Departman", "Doğum Tarihi"]];
+
+            // arrayToExcel fonksiyonunu çağırarak Excel dosyasını oluşturma ve indirme işlemini başlatma
+            arrayToExcel(TabelShiftBreakTime, { dateTimeSeperator: '_', fileNameAdd: "datetime", fileName: "Personel_" });
+        }
+
+
+
+        var _data = []; // JSON formatına dönüştürülmüş veriyi saklamak için kullanılacak değişken
+
+        // Excel dosyasını okuyarak içeriğini JSON formatına dönüştüren fonksiyon
+        function importExcelToJson(files) {
+            var file = files[0];
+            var reader = new FileReader();
+
+            reader.onload = function (e) {
+                var data = e.target.result;
+                var workbook = XLSX.read(data, { type: 'binary' });
+                var first_sheet_name = workbook.SheetNames[0];
+
+                // Excel sayfasını 2D dizi (array of arrays) verisine dönüştür
+                var aoa = XLSX.utils.sheet_to_json(workbook.Sheets[first_sheet_name], {
+                    header: 1,
+                    raw: false,
+                    blankRows: true
+                });
+
+                var data = [];
+                for (var r = 0; r < aoa.length; ++r) {
+                    var rowData = [];
+                    for (var i = 0; i < aoa[r].length; ++i) {
+                        if (aoa[r][i] != null && aoa[r][i] != '') {
+                            rowData.push(aoa[r][i]);
+                        } else {
+                            rowData.push(null);
+                        }
+                    }
+                    data.push(rowData);
+                }
+
+                if (data.length > 0) {
+                    _data = data;
+                    console.log("_data", _data); // Veriyi konsola yazdırma (isteğe bağlı)
+                    displayData(_data); // İsteğe bağlı: Veriyi web sayfasında gösterme
+                }
+            };
+
+            reader.onerror = function (ex) { };
+            reader.readAsBinaryString(file);
+        }
+
+        // Dönüştürülen JSON formatındaki veriyi web sayfasında gösteren fonksiyon
+        function displayData(data) {
+            var outputDiv = document.getElementById('output');
+            outputDiv.innerHTML = '<h2>Excel Data (JSON format)</h2>';
+
+            var jsonData = JSON.stringify(data, null, 2); // 2 boşluklu girintileme ile JSON formatına dönüştür
+            outputDiv.innerHTML += '<pre>' + jsonData + '</pre>';
+        }
+
+
+
+
+        document.getElementById('fileInput').addEventListener('change', function (e) {
+            importExcelToJson(e.target.files);
+        }, false);
+
+
+
+
+    </script>
+</body>
+
+</html>
