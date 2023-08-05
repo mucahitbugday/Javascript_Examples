@@ -1,0 +1,125 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
+
+:root {
+    --primary-color: #3498db;
+    --secondary-color: #2ecc71;
+}
+
+::-webkit-scrollbar {
+    display: none;
+}
+
+body {
+    font-family: "Handjet", sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: linear-gradient(33deg, var(--primary-color), var(--secondary-color));
+
+}
+
+.container {
+    width: 500px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+}
+
+h1 {
+    text-align: center;
+    color: var(--primary-color);
+
+}
+
+.input-container {
+    display: flex;
+    margin-bottom: 20px;
+}
+
+input {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    flex: 1;
+}
+
+button {
+    padding: 10px;
+    background-color: var(--primary-color);
+    color: #fff;
+    cursor: pointer;
+    transform: 300ms all;
+    border: 0;
+    border-radius: 4px;
+    margin-left: 5px;
+}
+
+button:hover {
+    background-color: var(--secondary-color);
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+ul li {
+    display: flex;
+    align-items: center;
+    position: relative;
+    padding: 10px 0;
+    border-bottom: 1px solid #ddd;
+    animation: fadeIn 0.5s ease;
+}
+
+ul li :last-child {
+    border-bottom: none;
+}
+
+span {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    margin-right: 10px;
+
+}
+
+.completed span {
+    text-decoration: line-through;
+    color: #999;
+}
+
+
+.todo-container {
+    max-height: 22vh;
+    min-height: 20vh;
+    overflow: auto;
+}
+
+@keyframes fadeIn {
+    from {
+        transform: translateY(-10px);
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+}
